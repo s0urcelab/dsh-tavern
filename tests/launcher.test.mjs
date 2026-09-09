@@ -58,10 +58,11 @@ const tavernPluginManifest = JSON.parse(await readFile(new URL('../tavern-plugin
 const profileWorkspace = await readFile(new URL('../pnpm-workspace.yaml', import.meta.url), 'utf8')
 
 
-test('公开安装命令使用 jsDelivr，不把 raw GitHub 作为国内用户入口', () => {
-  assert.match(readme, /cdn\.jsdelivr\.net\/gh\/flizzywine\/dsh-tavern@main\/install\.ps1/)
-  assert.match(readme, /cdn\.jsdelivr\.net\/gh\/flizzywine\/dsh-tavern@main\/install\.sh/)
-  assert.doesNotMatch(readme, /raw\.githubusercontent\.com\/flizzywine\/dsh-tavern\/main\/install\.(?:ps1|sh)/)
+test('README 只公开 Docker 部署方式', () => {
+  assert.match(readme, /^## Docker 部署$/m)
+  assert.match(readme, /docker compose up -d --build/)
+  assert.doesNotMatch(readme, /^### (?:DSH Desktop|命令行版|Android|手动安装)/m)
+  assert.doesNotMatch(readme, /DSH_TAVERN_HOST=['"]?(?:cli|desktop|android)/)
 })
 
 test('安装宿主默认使用 CLI，并明确接受 Desktop、Android 与 Docker', () => {
