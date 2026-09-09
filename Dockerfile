@@ -17,7 +17,7 @@ RUN DSH_VERSION="$(node -p "require('/tmp/dsh-compatibility.json').adaptedDshVer
 
 COPY --chown=node:node . .
 RUN mkdir -p /home/node/.dsh \
-    && chown -R node:node /home/node/.dsh
+    && chown -R node:node /app /home/node/.dsh
 
 USER node
 

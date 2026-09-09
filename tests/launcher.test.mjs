@@ -173,6 +173,7 @@ test('Docker 使用非 root 前台进程、持久卷和可接受鉴权响应的�
   assert.match(dockerfile, /@deepseek-ai\/dsh@\$\{DSH_VERSION\}/)
   assert.match(dockerfile, /^ARG VCS_REF=""$/m)
   assert.match(dockerfile, /\.dsh-tavern-release\.json/)
+  assert.match(dockerfile, /chown -R node:node \/app \/home\/node\/\.dsh/)
   assert.match(dockerfile, /^USER node$/m)
   assert.match(dockerfile, /^ENTRYPOINT \["\/bin\/sh", "\/app\/docker-entrypoint\.sh"\]$/m)
   assert.match(dockerEntrypoint, /install --host docker/)
