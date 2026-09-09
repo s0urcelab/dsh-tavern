@@ -5,7 +5,7 @@ set -eu
 export DSH_HOME="${DSH_HOME:-/home/node/.dsh}"
 export DSH_TAVERN_RUNTIME_HOST=docker
 
-BIND_HOST=${DSH_TAVERN_BIND_HOST:-0.0.0.0}
+BIND_HOST=127.0.0.1
 PORT=${DSH_TAVERN_PORT:-3081}
 
 node -e '

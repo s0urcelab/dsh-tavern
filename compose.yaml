@@ -5,11 +5,10 @@ services:
       context: .
     user: "0:0"
     init: true
+    network_mode: host
     restart: unless-stopped
     environment:
       DSH_TAVERN_PORT: ${DSH_TAVERN_PORT:-3081}
-    ports:
-      - "${DSH_TAVERN_PORT:-3081}:${DSH_TAVERN_PORT:-3081}"
     volumes:
       - dsh_data:/home/node/.dsh
     healthcheck:
