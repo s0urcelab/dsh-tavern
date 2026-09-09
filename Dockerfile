@@ -15,11 +15,10 @@ RUN DSH_VERSION="$(node -p "require('/tmp/dsh-compatibility.json').adaptedDshVer
     && npm cache clean --force \
     && rm /tmp/dsh-compatibility.json
 
-COPY --chown=node:node . .
-RUN mkdir -p /home/node/.dsh \
-    && chown -R node:node /app /home/node/.dsh
+COPY . .
+RUN mkdir -p /home/node/.dsh
 
-USER node
+USER root
 
 RUN if echo "${VCS_REF}" | grep -Eq '^[0-9a-fA-F]{40}$'; then \
       printf '{"commit":"%s","installedAt":"image-build"}\n' "${VCS_REF}" > .dsh-tavern-release.json; \

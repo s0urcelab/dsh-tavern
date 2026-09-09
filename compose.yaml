@@ -3,6 +3,7 @@ services:
     image: ${DSH_TAVERN_IMAGE:-ghcr.io/s0urcelab/dsh-tavern:latest}
     build:
       context: .
+    user: "0:0"
     init: true
     restart: unless-stopped
     environment:

@@ -169,19 +169,20 @@ test('Docker 命令行更新在执行安装器前失败', async () => {
   await assert.rejects(() => updateApplication({ host: 'docker', statusFile: '', delay: 0 }), /不支持容器内更新/)
 })
 
-test('Docker 使用非 root 前台进程、持久卷和可接受鉴权响应的健康检查', () => {
+test('Docker 使用 root 前台进程、持久卷和可接受鉴权响应的健康检查', () => {
   assert.match(dockerfile, /^FROM node:22\.19\.0-/m)
   assert.match(dockerfile, /@deepseek-ai\/dsh@\$\{DSH_VERSION\}/)
   assert.match(dockerfile, /^ARG VCS_REF=""$/m)
   assert.match(dockerfile, /\.dsh-tavern-release\.json/)
-  assert.match(dockerfile, /chown -R node:node \/app \/home\/node\/\.dsh/)
-  assert.match(dockerfile, /^USER node$/m)
+  assert.match(dockerfile, /^USER root$/m)
+  assert.doesNotMatch(dockerfile, /--chown=node:node|chown -R node:node/)
   assert.match(dockerfile, /^ENTRYPOINT \["\/bin\/sh", "\/app\/docker-entrypoint\.sh"\]$/m)
   assert.match(dockerEntrypoint, /install --host docker/)
   assert.match(dockerEntrypoint, /exec dsh --profile tavern --host/)
   assert.doesNotMatch(dockerEntrypoint, /install\.sh/)
   const service = composeDocument.services.tavern
   assert.equal(service.image, '${DSH_TAVERN_IMAGE:-ghcr.io/s0urcelab/dsh-tavern:latest}')
+  assert.equal(service.user, '0:0')
   assert.deepEqual(service.volumes, ['dsh_data:/home/node/.dsh'])
   assert.match(service.ports[0], /3081/)
   assert.match(service.healthcheck.test.join(' '), /200,401,403/)

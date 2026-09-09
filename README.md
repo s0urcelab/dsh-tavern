@@ -161,7 +161,7 @@ dsh-tavern 使用尽可能少而精的提示词，把流程和状态交给程序
 
 ## Docker 部署
 
-Docker 版会把 DSH 与 Tavern 打包到同一个镜像中，以前台进程运行，并把全部 DSH 配置、会话和 Tavern 数据持久化到 `dsh-tavern-data` 卷。需要 Docker Engine 24+ 和 Docker Compose v2。
+Docker 版会把 DSH 与 Tavern 打包到同一个镜像中，以 root 身份运行前台进程，避免不同宿主上的持久卷权限冲突；全部 DSH 配置、会话和 Tavern 数据持久化到 `dsh-tavern-data` 卷。需要 Docker Engine 24+ 和 Docker Compose v2。
 
 在仓库目录本地构建并启动：
 
