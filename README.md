@@ -330,7 +330,7 @@ DSH_TAVERN_IMAGE=your-dockerhub-name/dsh-tavern:latest docker compose pull
 DSH_TAVERN_IMAGE=your-dockerhub-name/dsh-tavern:latest docker compose up -d
 ```
 
-也可以把 `DSH_TAVERN_IMAGE=your-dockerhub-name/dsh-tavern:latest` 写入 `.env`。GitHub Actions 发布需要在仓库中配置 `DOCKERHUB_USERNAME` 和 `DOCKERHUB_TOKEN` 两个 Secret；`main` 发布 `latest` 和 `sha-*`，`v*` tag 额外发布语义化版本标签。
+也可以把 `DSH_TAVERN_IMAGE=your-dockerhub-name/dsh-tavern:latest` 写入 `.env`。GitHub Actions 发布需要在仓库中配置 `DOCKERHUB_USERNAME` 和 `DOCKERHUB_TOKEN` 两个 Secret；每次推送 `dockerize` 分支都会发布 `latest` 和对应的 `sha-*` 镜像。
 
 Docker 版允许在页面中检查更新，但不会在运行中的容器内替换程序文件。升级时重新拉取镜像并创建容器：
 
