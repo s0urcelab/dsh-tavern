@@ -42,6 +42,7 @@ const rootManifest = JSON.parse(await readFile(new URL('../package.json', import
 const dockerfile = await readFile(new URL('../Dockerfile', import.meta.url), 'utf8')
 const dockerEntrypoint = await readFile(new URL('../docker-entrypoint.sh', import.meta.url), 'utf8')
 const composeDocument = parseDocument(await readFile(new URL('../compose.yaml', import.meta.url), 'utf8')).toJS()
+const dockerWorkflow = await readFile(new URL('../.github/workflows/docker.yml', import.meta.url), 'utf8')
 
 test('无 Git 的 ZIP 安装在收尾时补写提交号', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'dsh-tavern-release-'))
@@ -180,10 +181,13 @@ test('Docker 使用非 root 前台进程、持久卷和可接受鉴权响应的�
   assert.match(dockerEntrypoint, /exec dsh --profile tavern --host/)
   assert.doesNotMatch(dockerEntrypoint, /install\.sh/)
   const service = composeDocument.services.tavern
+  assert.equal(service.image, '${DSH_TAVERN_IMAGE:-s0urce1911/dsh-tavern:latest}')
   assert.deepEqual(service.volumes, ['dsh_data:/home/node/.dsh'])
   assert.match(service.ports[0], /3081/)
   assert.match(service.healthcheck.test.join(' '), /200,401,403/)
   assert.equal(composeDocument.volumes.dsh_data.name, 'dsh-tavern-data')
+  assert.match(dockerWorkflow, /^  workflow_dispatch:$/m)
+  assert.match(dockerWorkflow, /images: s0urce1911\/dsh-tavern/)
 })
 
 test('Windows 更新在 PATH 缺少 PowerShell 时优先使用系统绝对路径', () => {
