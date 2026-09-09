@@ -20,7 +20,7 @@ function fail(message) {
 }
 
 function usage() {
-  console.log('用法：dsh-tavern install [--host cli|desktop|android] | {update|start|open|stop|restart|status}')
+  console.log('用法：dsh-tavern install [--host cli|desktop|android|docker] | {update|start|open|stop|restart|status}')
 }
 
 async function main() {

@@ -5,6 +5,8 @@ import os from 'node:os'
 import path from 'node:path'
 import { INSTALL_HOSTS, SOURCE_ROOT, RELEASE_FILE, commandExists, sleep } from './launcher-environment.mjs'
 
+const DOCKER_UPDATE_MESSAGE = 'Docker 版不支持容器内更新。请在宿主机运行 docker compose pull && docker compose up -d。'
+
 // Own update execution and durable terminal outcomes, including installed-but-needs-restart.
 export function encodeWindowsPowerShellScript(source) {
   const utf8Output = "$OutputEncoding = [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)\r\n"
@@ -53,6 +55,7 @@ function writeUpdateStatus(file, value) {
 }
 
 export async function updateApplication(options = { host: 'cli', statusFile: '', delay: 0 }) {
+  if (options.host === 'docker') throw new Error(DOCKER_UPDATE_MESSAGE)
   const sourceRoot = path.resolve(options.sourceRoot || SOURCE_ROOT)
   const log = typeof options.log === 'function' ? options.log : console.log
   const startedAt = Date.now()
@@ -162,6 +165,7 @@ function resolveWindowsPowerShell(options = {}) {
 }
 
 export function resolveUpdateProgram(host, platform = process.platform, sourceRoot = SOURCE_ROOT, options = {}) {
+  if (host === 'docker') throw new Error(DOCKER_UPDATE_MESSAGE)
   if (host === 'android') {
     const script = path.join(sourceRoot, 'android', 'update.sh')
     return { script, command: 'bash', args: [script] }

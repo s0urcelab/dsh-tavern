@@ -39,6 +39,9 @@ const profilePatch = await readFile(new URL('../cordis.patch.yml', import.meta.u
 const managedProfilePatch = await readFile(new URL('../tavern-plugin/cordis.patch.yml', import.meta.url), 'utf8')
 const profileConfigurationSource = await readFile(new URL('../bin/profile-configuration.mjs', import.meta.url), 'utf8')
 const rootManifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
+const dockerfile = await readFile(new URL('../Dockerfile', import.meta.url), 'utf8')
+const dockerEntrypoint = await readFile(new URL('../docker-entrypoint.sh', import.meta.url), 'utf8')
+const composeDocument = parseDocument(await readFile(new URL('../compose.yaml', import.meta.url), 'utf8')).toJS()
 
 test('无 Git 的 ZIP 安装在收尾时补写提交号', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'dsh-tavern-release-'))
@@ -61,10 +64,11 @@ test('公开安装命令使用 jsDelivr，不把 raw GitHub 作为国内用户�
   assert.doesNotMatch(readme, /raw\.githubusercontent\.com\/flizzywine\/dsh-tavern\/main\/install\.(?:ps1|sh)/)
 })
 
-test('安装宿主默认使用 CLI，并明确接受 Desktop 与 Android', () => {
+test('安装宿主默认使用 CLI，并明确接受 Desktop、Android 与 Docker', () => {
   assert.equal(parseInstallHost([]), 'cli')
   assert.equal(parseInstallHost(['--host', 'desktop']), 'desktop')
   assert.equal(parseInstallHost(['--host', 'android']), 'android')
+  assert.equal(parseInstallHost(['--host', 'docker']), 'docker')
   assert.equal(parseInstallHost(['--host=cli']), 'cli')
   assert.throws(() => parseInstallHost(['--host', 'unknown']), /不支持的安装宿主/)
   assert.throws(() => parseInstallHost(['--unknown']), /无法识别的安装参数/)
@@ -138,6 +142,7 @@ test('UI 更新参数明确传递宿主、状态文件和启动延迟', () => {
     targetCommit: 'a'.repeat(40),
   })
   assert.deepEqual(parseUpdateOptions(['--host=android']), { host: 'android', statusFile: '', delay: 0, targetCommit: '' })
+  assert.deepEqual(parseUpdateOptions(['--host=docker']), { host: 'docker', statusFile: '', delay: 0, targetCommit: '' })
   assert.deepEqual(parseUpdateOptions([]), { host: 'cli', statusFile: '', delay: 0, targetCommit: '' })
   assert.throws(() => parseUpdateOptions(['--host', 'other']), /不支持的安装宿主/)
   assert.throws(() => parseUpdateOptions(['--status-file', 'relative.json']), /绝对路径/)
@@ -155,6 +160,28 @@ test('Android UI 更新选择专用更新脚本，CLI 与 Desktop 保持原安�
     command: 'sh',
     args: [path.join('/app/dsh-tavern', 'install.sh')],
   })
+  assert.throws(() => resolveUpdateProgram('docker', 'linux', '/app/dsh-tavern'), /不支持容器内更新/)
+})
+
+test('Docker 命令行更新在执行安装器前失败', async () => {
+  await assert.rejects(() => updateApplication({ host: 'docker', statusFile: '', delay: 0 }), /不支持容器内更新/)
+})
+
+test('Docker 使用非 root 前台进程、持久卷和可接受鉴权响应的健康检查', () => {
+  assert.match(dockerfile, /^FROM node:22\.19\.0-/m)
+  assert.match(dockerfile, /@deepseek-ai\/dsh@\$\{DSH_VERSION\}/)
+  assert.match(dockerfile, /^ARG VCS_REF=""$/m)
+  assert.match(dockerfile, /\.dsh-tavern-release\.json/)
+  assert.match(dockerfile, /^USER node$/m)
+  assert.match(dockerfile, /^ENTRYPOINT \["\/bin\/sh", "\/app\/docker-entrypoint\.sh"\]$/m)
+  assert.match(dockerEntrypoint, /install --host docker/)
+  assert.match(dockerEntrypoint, /exec dsh --profile tavern --host/)
+  assert.doesNotMatch(dockerEntrypoint, /install\.sh/)
+  const service = composeDocument.services.tavern
+  assert.deepEqual(service.volumes, ['dsh_data:/home/node/.dsh'])
+  assert.match(service.ports[0], /3081/)
+  assert.match(service.healthcheck.test.join(' '), /200,401,403/)
+  assert.equal(composeDocument.volumes.dsh_data.name, 'dsh-tavern-data')
 })
 
 test('Windows 更新在 PATH 缺少 PowerShell 时优先使用系统绝对路径', () => {

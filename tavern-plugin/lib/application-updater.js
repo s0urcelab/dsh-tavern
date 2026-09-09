@@ -17,6 +17,7 @@ const COMMIT_URL = 'https://api.github.com/repos/flizzywine/dsh-tavern/commits/m
 const COMPARE_URL = 'https://api.github.com/repos/flizzywine/dsh-tavern/compare'
 const execFileAsync = promisify(execFile)
 const UPDATE_CHECK_POLICY = 3
+export const DOCKER_UPDATE_MESSAGE = 'Docker 版不支持容器内更新。请在宿主机运行 docker compose pull && docker compose up -d。'
 const CDN_METADATA_URL = 'https://cdn.jsdelivr.net/gh/flizzywine/dsh-tavern@main/dsh-tavern-runtime.json'
 const RUNTIME_FILES = new Set(['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'cordis.patch.yml', 'install.ps1', 'install.sh'])
 const RUNTIME_DIRECTORIES = ['bin/', 'config/', 'presets/', 'tavern-plugin/', 'patches/']
@@ -116,7 +117,7 @@ function runtimeCommitIdentityOf(value) {
 
 function installHostOf(manifest) {
   const host = manifest?.dshTavern?.host
-  return host === 'desktop' || host === 'android' ? host : 'cli'
+  return host === 'desktop' || host === 'android' || host === 'docker' ? host : 'cli'
 }
 
 function processIsAlive(pid) {
@@ -330,7 +331,7 @@ export function createApplicationUpdater(options) {
   }
 
   async function host() {
-    if (runtimeHost === 'cli' || runtimeHost === 'desktop' || runtimeHost === 'android') return runtimeHost
+    if (runtimeHost === 'cli' || runtimeHost === 'desktop' || runtimeHost === 'android' || runtimeHost === 'docker') return runtimeHost
     try {
       return installHostOf(JSON.parse(await readFile(profileManifest, 'utf8')))
     } catch (error) {
@@ -426,6 +427,7 @@ export function createApplicationUpdater(options) {
       throw new Error('更新正在进行，请勿重复启动')
     }
     const installHost = await host()
+    if (installHost === 'docker') throw new Error(DOCKER_UPDATE_MESSAGE)
     let version
     try {
       version = await versions(identity)

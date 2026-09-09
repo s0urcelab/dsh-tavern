@@ -1,0 +1,28 @@
+services:
+  tavern:
+    image: ${DSH_TAVERN_IMAGE:-dsh-tavern:local}
+    build:
+      context: .
+    init: true
+    restart: unless-stopped
+    environment:
+      DSH_TAVERN_PORT: ${DSH_TAVERN_PORT:-3081}
+    ports:
+      - "${DSH_TAVERN_PORT:-3081}:${DSH_TAVERN_PORT:-3081}"
+    volumes:
+      - dsh_data:/home/node/.dsh
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          node -e "fetch('http://127.0.0.1:$${DSH_TAVERN_PORT:-3081}/',
+          {signal:AbortSignal.timeout(1000)}).then(r=>process.exit([200,401,403].includes(r.status)?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+    stop_grace_period: 15s
+
+volumes:
+  dsh_data:
+    name: dsh-tavern-data

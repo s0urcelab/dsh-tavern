@@ -267,6 +267,8 @@ export async function installProfile(host = 'cli') {
     console.log('请重启 DSH Desktop，然后从托盘的 Profile 菜单切换到 tavern。')
   } else if (host === 'android') {
     console.log('Android Tavern Profile 已配置。')
+  } else if (host === 'docker') {
+    console.log('Docker Tavern Profile 已配置。')
   } else {
     console.log('启动：dsh-tavern start')
   }

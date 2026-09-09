@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 // Shared installation paths and process invocation; no install/start/update effects on import.
 export const PROFILE = 'tavern'
-export const INSTALL_HOSTS = new Set(['cli', 'desktop', 'android'])
+export const INSTALL_HOSTS = new Set(['cli', 'desktop', 'android', 'docker'])
 export const CLI_HOST = '127.0.0.1'
 export const CLI_PORT = resolveServicePort(process.env.DSH_TAVERN_PORT)
 export const SCRIPT_PATH = fileURLToPath(new URL('./dsh-tavern.mjs', import.meta.url))

@@ -5002,6 +5002,10 @@ window.__ModuleLoader__.load({
 			}
 			async function performUpdate() {
 				if (updateStatus.phase !== "update-available") return;
+				if (updateStatus.host === "docker") {
+					setError("Docker 版请在宿主机运行 docker compose pull && docker compose up -d。");
+					return;
+				}
 				if (!window.confirm("更新期间会短暂断开，人物卡、资料和对话数据不会受到影响。\n确定更新到 GitHub 最新版吗？")) return;
 				updateStartedAtRef.current = Date.now();
 				setUpdateStatus({ ...updateStatus, phase: "running", host: updateStatus.host || "cli", startedAt: updateStartedAtRef.current });
@@ -5169,7 +5173,9 @@ window.__ModuleLoader__.load({
 				: updateStatus.phase === "up-to-date"
 					? "✓ 未发现更新构建"
 				: updateStatus.phase === "update-available"
-					? "发现新构建 " + ((updateStatus.latestCommit || "").slice(0, 7) || updateStatus.latestVersion || "")
+					? (updateStatus.host === "docker"
+						? "发现新构建 " + ((updateStatus.latestCommit || "").slice(0, 7) || updateStatus.latestVersion || "") + "。请在宿主机运行 docker compose pull && docker compose up -d。"
+						: "发现新构建 " + ((updateStatus.latestCommit || "").slice(0, 7) || updateStatus.latestVersion || ""))
 				: updateStatus.phase === "running"
 				? "正在下载并安装，期间页面可能暂时断开… 如果较长时间仍未更新完成，建议重新安装一次；检测到 Git 时只会下载运行所需代码。"
 				: updateStatus.phase === "installed-restart-required"
@@ -5187,9 +5193,9 @@ window.__ModuleLoader__.load({
 						: "尚未检查更新";
 			const currentVersionLabel = updateStatus.currentVersion && updateStatus.currentVersion !== "unknown" ? "v" + updateStatus.currentVersion : "版本未知";
 			const currentCommitLabel = (updateStatus.currentCommit || "").slice(0, 7) || "构建未知";
-			const updateHostLabel = updateStatus.host === "desktop" ? "Desktop 版" : (updateStatus.host === "android" ? "Android 版" : "命令行版");
+			const updateHostLabel = updateStatus.host === "desktop" ? "Desktop 版" : (updateStatus.host === "android" ? "Android 版" : (updateStatus.host === "docker" ? "Docker 版" : "命令行版"));
 			const checkingOrRunning = updateStatus.phase === "checking" || updateStatus.phase === "running" || updateStatus.phase === "loading";
-			const updateActions = updateStatus.phase === "update-available"
+			const updateActions = updateStatus.phase === "update-available" && updateStatus.host !== "docker"
 				? h("div", { className: "dsh-tavern-update-actions" },
 					h("button", { className: "dsh-tavern-update-button", onClick: checkUpdate }, "检查更新"),
 					h("button", { className: "dsh-tavern-update-button primary", onClick: performUpdate }, "进行更新"))

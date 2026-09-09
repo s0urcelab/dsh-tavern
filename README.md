@@ -304,6 +304,52 @@ dsh-tavern 是运行在 DSH 上的插件项目，不包含 DSH 本体。DSH 本�
 
 用户数据统一保存在 DSH 的 Tavern Profile 数据目录中。
 
+### Docker 部署
+
+Docker 版会把 DSH 与 Tavern 打包到同一个镜像中，以前台进程运行，并把全部 DSH 配置、会话和 Tavern 数据持久化到 `dsh-tavern-data` 卷。需要 Docker Engine 24+ 和 Docker Compose v2。
+
+在仓库目录本地构建并启动：
+
+```bash
+docker compose up -d --build
+docker compose logs -f tavern
+```
+
+日志出现 `dsh web:` 后，复制完整地址访问。日志中的地址可能使用 `0.0.0.0`，从部署机器本地访问时请把主机名替换成 `127.0.0.1`，保留完整的 `token` 查询参数。这个 token 是访问凭证，请勿分享。
+
+默认映射 3081 端口。需要修改端口时，在仓库根目录创建 `.env`：
+
+```dotenv
+DSH_TAVERN_PORT=3090
+```
+
+使用 Docker Hub 镜像时，将 `your-dockerhub-name` 替换为实际命名空间：
+
+```bash
+DSH_TAVERN_IMAGE=your-dockerhub-name/dsh-tavern:latest docker compose pull
+DSH_TAVERN_IMAGE=your-dockerhub-name/dsh-tavern:latest docker compose up -d
+```
+
+也可以把 `DSH_TAVERN_IMAGE=your-dockerhub-name/dsh-tavern:latest` 写入 `.env`。GitHub Actions 发布需要在仓库中配置 `DOCKERHUB_USERNAME` 和 `DOCKERHUB_TOKEN` 两个 Secret；`main` 发布 `latest` 和 `sha-*`，`v*` tag 额外发布语义化版本标签。
+
+Docker 版允许在页面中检查更新，但不会在运行中的容器内替换程序文件。升级时重新拉取镜像并创建容器：
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+停止和删除容器不会删除 `dsh-tavern-data` 卷。备份前先停止服务：
+
+```bash
+docker compose stop tavern
+docker run --rm -v dsh-tavern-data:/data -v "$PWD":/backup alpine \
+  tar czf /backup/dsh-tavern-data.tgz -C /data .
+docker compose start tavern
+```
+
+恢复时使用同样的挂载方式解压到 `/data`。不要在容器内运行 `install.sh` 或 `dsh-tavern update`；镜像升级和回滚都应由 Docker 完成。
+
 ## 社区交流
 
 欢迎加入 [dsh-tavern Discord 讨论频道](https://discord.com/channels/1134557553011998840/1538577327028445194)，交流使用经验、分享人物卡或反馈问题。

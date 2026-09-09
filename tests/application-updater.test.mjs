@@ -7,7 +7,7 @@ import path from 'node:path'
 import { createServer } from 'node:http'
 import test, { beforeEach, afterEach, mock } from 'node:test'
 
-import { createApplicationUpdater as createUpdater, sanitizeUpdateError } from '../tavern-plugin/lib/application-updater.js'
+import { createApplicationUpdater as createUpdater, DOCKER_UPDATE_MESSAGE, sanitizeUpdateError } from '../tavern-plugin/lib/application-updater.js'
 
 // Never let fixtures accidentally consume a real release. Local HTTP fixtures
 // still exercise the production fetch path; every other request fails the test,
@@ -45,6 +45,25 @@ const verifiedUpdate = {
   compareCommits: async () => 'ahead',
 }
 const runningVersion = { ...knownIdentity, latestVersion: '1.1.0', latestCommit: 'b'.repeat(40), checkSource: 'github', checkWarning: undefined }
+
+test('Docker 可以检查更新，但拒绝在容器内启动安装器', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'dsh-tavern-docker-update-'))
+  try {
+    const updater = createApplicationUpdater({
+      ...verifiedUpdate,
+      dataRoot: path.join(root, 'data'),
+      sourceRoot: root,
+      runtimeHost: 'docker',
+      spawnProcess() { assert.fail('Docker 不应启动安装器') },
+    })
+    const checked = await updater.check()
+    assert.equal(checked.phase, 'update-available')
+    assert.equal(checked.host, 'docker')
+    await assert.rejects(() => updater.start(), new RegExp(DOCKER_UPDATE_MESSAGE))
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
 
 test('真实 Git 历史可离线识别新旧，包括 archive 安装的 bare source-cache', async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'dsh-tavern-order-git-'))
