@@ -1,6 +1,6 @@
 services:
   tavern:
-    image: ${DSH_TAVERN_IMAGE:-s0urce1911/dsh-tavern:latest}
+    image: ${DSH_TAVERN_IMAGE:-ghcr.io/s0urcelab/dsh-tavern:latest}
     build:
       context: .
     init: true

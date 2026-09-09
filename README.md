@@ -178,14 +178,14 @@ docker compose logs -f tavern
 DSH_TAVERN_PORT=3090
 ```
 
-使用 Docker Hub 镜像：
+使用 GHCR 镜像：
 
 ```bash
 docker compose pull
 docker compose up -d
 ```
 
-Compose 默认使用 `s0urce1911/dsh-tavern:latest`，也可以通过 `.env` 中的 `DSH_TAVERN_IMAGE` 切换标签或镜像。GitHub Actions 发布需要配置 `DOCKERHUB_TOKEN` Secret；每次推送 `dockerize` 分支或手动运行 Docker 工作流，都会发布 `latest` 和对应的 `sha-*` 镜像。
+Compose 默认使用 `ghcr.io/s0urcelab/dsh-tavern:latest`，也可以通过 `.env` 中的 `DSH_TAVERN_IMAGE` 切换标签或镜像。发布使用 GitHub 内置 `GITHUB_TOKEN`，无需额外配置 Registry Secret；每次推送 `dockerize` 分支或手动运行 Docker 工作流，都会发布 `latest` 和对应的 `sha-*` 镜像。
 
 Docker 版允许在页面中检查更新，但不会在运行中的容器内替换程序文件。升级时重新拉取镜像并创建容器：
 

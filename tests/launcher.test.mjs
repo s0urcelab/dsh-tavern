@@ -181,13 +181,15 @@ test('Docker 使用非 root 前台进程、持久卷和可接受鉴权响应的�
   assert.match(dockerEntrypoint, /exec dsh --profile tavern --host/)
   assert.doesNotMatch(dockerEntrypoint, /install\.sh/)
   const service = composeDocument.services.tavern
-  assert.equal(service.image, '${DSH_TAVERN_IMAGE:-s0urce1911/dsh-tavern:latest}')
+  assert.equal(service.image, '${DSH_TAVERN_IMAGE:-ghcr.io/s0urcelab/dsh-tavern:latest}')
   assert.deepEqual(service.volumes, ['dsh_data:/home/node/.dsh'])
   assert.match(service.ports[0], /3081/)
   assert.match(service.healthcheck.test.join(' '), /200,401,403/)
   assert.equal(composeDocument.volumes.dsh_data.name, 'dsh-tavern-data')
   assert.match(dockerWorkflow, /^  workflow_dispatch:$/m)
-  assert.match(dockerWorkflow, /images: s0urce1911\/dsh-tavern/)
+  assert.match(dockerWorkflow, /registry: ghcr\.io/)
+  assert.match(dockerWorkflow, /images: ghcr\.io\/s0urcelab\/dsh-tavern/)
+  assert.match(dockerWorkflow, /packages: write/)
 })
 
 test('Windows 更新在 PATH 缺少 PowerShell 时优先使用系统绝对路径', () => {
